@@ -14,6 +14,10 @@ from airflow.providers.google.cloud.operators.dataproc import (
     DataprocDeleteClusterOperator,
     DataprocSubmitJobOperator,
 )
+try:
+    from airflow.operators.empty import EmptyOperator
+except ImportError:
+    from airflow.operators.dummy import DummyOperator as EmptyOperator
 from datetime import timedelta
 import pendulum
 
@@ -35,7 +39,7 @@ CLUSTER_NAME = "{{ dag_id.replace('_', '-')[:25] }}-cluster-{{ '{{' }} ts_nodash
 
 default_args = {
     'owner': 'airflow',
-    'depends_on_past': False,
+    'depends_on_past': TRUE,
     'start_date': pendulum.today('UTC').add(days=-1),
     'email_on_failure': False,
     'retries': 0,
@@ -109,7 +113,16 @@ with DAG(
         trigger_rule="all_done",
     )
 
+    # 4. End Task (Ensures DAG failure if submit_job fails, despite delete_cluster success)
+    end_task = EmptyOperator(task_id="end_task")
+
     create_cluster >> submit_job >> delete_cluster
+    
+    # Ensure end_task waits for both logic and cleanup
+    # If submit_job fails, end_task becomes upstream_failed (trigger_rule=all_success default)
+    # This propagates the failure to the DAG status.
+    submit_job >> end_task
+    delete_cluster >> end_task
 """
 
 def generate_and_upload_dags(config_dir, project_id, bucket_name):
