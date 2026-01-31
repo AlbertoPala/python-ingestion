@@ -28,8 +28,9 @@ PIP_PACKAGES = "{{ pip_packages }}" # Space separated string
 PROJECT_ID = "{{ project_id }}"
 BUCKET_NAME = "{{ bucket_name }}"
 
-# Note: We use Jinja2 to render the Airflow template {{ ts_nodash }}
-CLUSTER_NAME = "{{ dag_id }}-cluster-{{ '{{' }} ts_nodash {{ '}}' }}"
+# Note: Dataproc cluster names must be lowercase, no underscores, max 51 chars.
+# We replace underscores with hyphens and truncate the DAG ID if necessary.
+CLUSTER_NAME = "{{ dag_id.replace('_', '-')[:25] }}-cluster-{{ '{{' }} ts_nodash {{ '}}' }}"
 
 
 default_args = {
