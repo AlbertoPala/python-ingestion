@@ -1,32 +1,30 @@
 # Agile DAG Factory (Dev Focus)
 
-Este repositorio implementa una orquestación ligera y ágil para entornos de desarrollo.
-Al hacer push a la rama principal, el código se despliega automáticamente al entorno **Development** configurado en GitHub Environments.
+This repository implements a lightweight and agile orchestration for development environments.
+Upon pushing to the main branch, code is automatically deployed to the **Development** environment configured in GitHub Environments.
 
-## Filosofía "Agile"
-- **Zero Local Config**: No necesitas configurar variables Airflow. El pipeline "hornea" (`bakes`) las variables de entorno (`Project ID`, `Bucket`) directamente en los DAGs generados.
-- **Direct Upload**: Los DAGs se generan en memoria en el runner y se suben directamente a la nube.
-- **Environment Isolation**: Usa GitHub Environments para separar Dev de Prod.
+## "Agile" Philosophy
+- **Zero Local Config**: No need to configure Airflow variables. The pipeline "bakes" environment variables (`Project ID`, `Bucket`) directly into the generated DAGs.
+- **Direct Upload**: DAGs are generated in-memory within the runner and uploaded directly to the cloud.
+- **Environment Isolation**: Uses GitHub Environments to separate Dev from Prod.
 
-## Estructura
-- `config/`: YAMLs de definición.
-- `scripts/`: Lógica pura en Python.
-- `utils/`: Herramientas del "Factory".
-- `.github/workflows/`: Pipeline apuntando a `environment: development`.
+## Structure
+- `config/`: Definition YAMLs.
+- `scripts/`: Pure Python logic.
+- `utils/`: "Factory" tools.
+- `.github/workflows/`: Pipeline targeting `environment: development`.
 
-## Prerrequisitos (GitHub Environment: development)
-Asegúrese de crear el Environment `development` en GitHub y configurar los siguientes secretos:
+## Prerequisites (GitHub Environment: development)
+Ensure you create the `development` Environment in GitHub and configure the following secrets:
 
+1. `GCP_WIF_PROVIDER`: Workload Identity Provider ID (including the full path).
+2. `GCP_SERVICE_ACCOUNT`: GCP Service Account Email (Required for impersonation).
+3. `GCP_PROJECT_ID`: GCP Project ID.
+4. `GCP_COMPOSER_BUCKET`: Composer bucket name.
 
-1. `GCP_WIF_PROVIDER`: ID del Provider de Workload Identity (incluyendo la ruta completa).
-2. `GCP_PROJECT_ID`: ID del proyecto GCP.
-3. `GCP_COMPOSER_BUCKET`: Nombre del bucket de Composer.
-4. `GCP_WIF_POOL`: ID del Pool de Identidad (si se requiere para referencia).
-
-
-## Cómo Escalar a Producción
-Dado que el generador utiliza variables de entorno inyectadas por el pipeline:
-1. Cree un Environment `production` en GitHub.
-2. Clone los secretos con los valores de Producción.
-3. Actualice el pipeline o cree uno nuevo que apunte a `environment: production`. 
-   - No se requiere cambiar una sola línea de código en los scripts o YAMLs.
+## How to Scale to Production
+Since the generator uses environment variables injected by the pipeline:
+1. Create a `production` Environment in GitHub.
+2. Clone the secrets with Production values.
+3. Update the pipeline or create a new one targeting `environment: production`.
+   - No code changes are required in scripts or YAMLs.

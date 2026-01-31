@@ -26,8 +26,8 @@ jobs:
         with:
           # Uses user-provided WIF secrets
           workload_identity_provider: '${{ secrets.GCP_WIF_PROVIDER }}'
-          # Note: 'service_account' was not listed in the new secrets. 
-          # Assuming WIF Principal has direct permissions.
+          service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
+
 
 
       - name: Set up Cloud SDK
