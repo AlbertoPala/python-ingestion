@@ -14,7 +14,7 @@ from airflow.providers.google.cloud.operators.dataproc import (
     DataprocDeleteClusterOperator,
     DataprocSubmitJobOperator,
 )
-from airflow.utils import timezone
+from datetime import timedelta
 import pendulum
 
 # Configuration generated from YAML and Environment
