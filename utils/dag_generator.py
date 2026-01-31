@@ -49,8 +49,8 @@ with DAG(
     DAG_ID,
     default_args=default_args,
     schedule=SCHEDULE,
-    catchup=False,
-    tags=['generated', 'agile-factory'],
+    catchup={{ catchup }},
+    tags={{ tags }},
 ) as dag:
 
     # 1. Create Dataproc Cluster
@@ -161,8 +161,10 @@ def generate_and_upload_dags(config_dir, project_id, bucket_name):
                 'script_path': script_path_raw.replace('\\', '/'),
                 'pip_packages': " ".join(config.get('dependencies') or []),
                 'job_args': config.get('args', []),
-                'user_args': config.get('arguments', {}),
+                'user_args_json': json.dumps(user_args),
                 'script_task_id': script_name,
+                'catchup': config.get('catchup', False),
+                'tags': config.get('tags', ['generated', 'agile-factory']),
                 'project_id': project_id,
                 'bucket_name': bucket_name
             }
