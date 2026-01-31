@@ -28,7 +28,9 @@ PIP_PACKAGES = "{{ pip_packages }}" # Space separated string
 PROJECT_ID = "{{ project_id }}"
 BUCKET_NAME = "{{ bucket_name }}"
 
-CLUSTER_NAME = f"{DAG_ID}-cluster-{{{{ ts_nodash }}}}"
+# Note: We use Jinja2 to render the Airflow template {{ ts_nodash }}
+CLUSTER_NAME = "{{ dag_id }}-cluster-{{ '{{' }} ts_nodash {{ '}}' }}"
+
 
 default_args = {
     'owner': 'airflow',
