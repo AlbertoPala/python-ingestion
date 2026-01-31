@@ -47,7 +47,17 @@ default_args = {
 }
 
 # Merge user arguments from YAML
-user_args = {{ user_args }}
+# Using JSON deserialization for robustness against syntax errors
+try:
+    user_args_json = '{{ user_args_json }}'
+    user_args = json.loads(user_args_json)
+    if not isinstance(user_args, dict):
+        print(f"Warning: user_args is not a dict: {user_args}")
+        user_args = {}
+except Exception as e:
+    print(f"Error parsing user_args: {e}")
+    user_args = {}
+
 default_args.update(user_args)
 
 with DAG(
