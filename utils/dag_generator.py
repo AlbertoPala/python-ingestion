@@ -14,8 +14,8 @@ from airflow.providers.google.cloud.operators.dataproc import (
     DataprocDeleteClusterOperator,
     DataprocSubmitJobOperator,
 )
-from airflow.utils.dates import days_ago
-from datetime import timedelta
+from airflow.utils import timezone
+import pendulum
 
 # Configuration generated from YAML and Environment
 DAG_ID = "{{ dag_id }}"
@@ -35,7 +35,7 @@ CLUSTER_NAME = "{{ dag_id }}-cluster-{{ '{{' }} ts_nodash {{ '}}' }}"
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': days_ago(1),
+    'start_date': pendulum.today('UTC').add(days=-1),
     'email_on_failure': False,
     'retries': 0,
 }
