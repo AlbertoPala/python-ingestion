@@ -163,6 +163,14 @@ def generate_and_upload_dags(config_dir, project_id, bucket_name):
             if not script_name:
                 script_name = "run_processing_logic"
 
+            # Ensure user_args is a dict
+            user_args = config.get('arguments', {})
+            if user_args is None:
+                user_args = {}
+            elif not isinstance(user_args, dict):
+                print(f"Warning: 'arguments' in {filename} is not a dict. Ignoring.")
+                user_args = {}
+
             # Context now includes Project/Bucket from Environment
             context = {
                 'dag_id': dag_id,
