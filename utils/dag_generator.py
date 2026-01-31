@@ -41,6 +41,10 @@ default_args = {
     'retries': 0,
 }
 
+# Merge user arguments from YAML
+user_args = {{ user_args }}
+default_args.update(user_args)
+
 with DAG(
     DAG_ID,
     default_args=default_args,
@@ -85,7 +89,7 @@ with DAG(
 
     # 2. Submit Job
     submit_job = DataprocSubmitJobOperator(
-        task_id="run_processing_logic",
+        task_id="{{ script_task_id }}",
         job={
             "placement": {"cluster_name": CLUSTER_NAME},
             "pyspark_job": {
@@ -140,6 +144,11 @@ def generate_and_upload_dags(config_dir, project_id, bucket_name):
 
             cluster_conf = config.get('cluster_config', {})
             
+            script_path_raw = config.get('script_path', '')
+            script_name = os.path.splitext(os.path.basename(script_path_raw))[0]
+            if not script_name:
+                script_name = "run_processing_logic"
+
             # Context now includes Project/Bucket from Environment
             context = {
                 'dag_id': dag_id,
@@ -149,8 +158,11 @@ def generate_and_upload_dags(config_dir, project_id, bucket_name):
                 'worker_machine_type': cluster_conf.get('worker_machine_type', 'n1-standard-2'),
                 'num_workers': cluster_conf.get('num_workers', 2),
                 'image_version': cluster_conf.get('image_version', '2.1-debian11'),
-                'script_path': config.get('script_path', '').replace('\\', '/'),
+                'script_path': script_path_raw.replace('\\', '/'),
                 'pip_packages': " ".join(config.get('dependencies') or []),
+                'job_args': config.get('args', []),
+                'user_args': config.get('arguments', {}),
+                'script_task_id': script_name,
                 'project_id': project_id,
                 'bucket_name': bucket_name
             }

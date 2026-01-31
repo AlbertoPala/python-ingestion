@@ -10,3 +10,7 @@ cluster_config:
 
 dependencies:
   - requests
+
+arguments:
+  owner: "mi equipo"
+  retries: 2
