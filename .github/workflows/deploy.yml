@@ -1,0 +1,65 @@
+name: Deploy to Development
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: 'read'
+  id-token: 'write'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Enforces usage of the 'development' environment secrets
+    environment: dev
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: 'google-github-actions/auth@v1'
+        with:
+          # Uses user-provided WIF secrets
+          workload_identity_provider: '${{ secrets.GCP_WIF_PROVIDER }}'
+          # Note: 'service_account' was not listed in the new secrets. 
+          # Assuming WIF Principal has direct permissions.
+
+
+      - name: Set up Cloud SDK
+        uses: 'google-github-actions/setup-gcloud@v1'
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Generator Dependencies
+        run: |
+          pip install pyyaml jinja2 google-cloud-storage
+
+      - name: Generate and Upload DAGs (Direct Upload)
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_COMPOSER_BUCKET: ${{ secrets.GCP_COMPOSER_BUCKET }}
+        run: |
+          echo "Deploying to Environment: Development"
+          echo "Target Bucket: $GCP_COMPOSER_BUCKET"
+          # Generates DAGs with 'development' values baked in and uploads them
+          python utils/dag_generator.py
+
+      - name: Sync Scripts & Utils
+        env:
+          GCP_COMPOSER_BUCKET: ${{ secrets.GCP_COMPOSER_BUCKET }}
+        run: |
+          echo "Syncing support files to: gs://$GCP_COMPOSER_BUCKET"
+          
+          # Sync Scripts
+          gsutil -m rsync -d -r scripts gs://$GCP_COMPOSER_BUCKET/scripts
+          
+          # Sync Utils
+          gsutil -m rsync -d -r utils gs://$GCP_COMPOSER_BUCKET/utils

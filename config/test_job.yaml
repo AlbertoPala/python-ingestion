@@ -1,0 +1,12 @@
+dag_id: "test_job_requests"
+schedule: "@once"
+description: "Pipeline de prueba para validar conectividad externa"
+script_path: "scripts/test_job.py"
+
+cluster_config:
+  region: "us-central1"
+  master_machine_type: "n1-standard-2"
+  num_workers: 2
+
+dependencies:
+  - requests
