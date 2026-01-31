@@ -17,8 +17,11 @@ Upon pushing to the main branch, code is automatically deployed to the **Develop
 ## Prerequisites (GitHub Environment: development)
 Ensure you create the `development` Environment in GitHub and configure the following secrets:
 
-1. `GCP_WIF_PROVIDER`: Workload Identity Provider ID (including the full path).
+1. `GCP_WIF_PROVIDER`: Workload Identity Provider ID.
+   - Format: `projects/{PROJECT_NUMBER}/locations/global/workloadIdentityPools/{POOL_ID}/providers/{PROVIDER_ID}`
+   - **Important**: Use the **Project Number** (numeric), not the Project ID.
 2. `GCP_SERVICE_ACCOUNT`: GCP Service Account Email (Required for impersonation).
+
 3. `GCP_PROJECT_ID`: GCP Project ID.
 4. `GCP_COMPOSER_BUCKET`: Composer bucket name.
 

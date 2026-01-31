@@ -117,8 +117,9 @@ def generate_and_upload_dags(config_dir, project_id, bucket_name):
 
     # Initialize GCS Client
     try:
-        storage_client = storage.Client()
+        storage_client = storage.Client(project=project_id)
         bucket = storage_client.bucket(bucket_name)
+
     except Exception as e:
         print(f"Failed to connect to GCS bucket {bucket_name}: {e}")
         sys.exit(1)
