@@ -148,7 +148,7 @@ def generate_and_upload_dags(config_dir, project_id, bucket_name):
                 'num_workers': cluster_conf.get('num_workers', 2),
                 'image_version': cluster_conf.get('image_version', '2.1-debian11'),
                 'script_path': config.get('script_path', '').replace('\\', '/'),
-                'pip_packages': " ".join(config.get('dependencies', [])),
+                'pip_packages': " ".join(config.get('dependencies') or []),
                 'project_id': project_id,
                 'bucket_name': bucket_name
             }
