@@ -3,8 +3,13 @@ import glob
 import yaml
 import sys
 import json
+import logging
 from jinja2 import Template
 from google.cloud import storage
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # Template definition
 # Note: Project ID and Bucket are now baked in at generation time from Env Vars
@@ -50,7 +55,7 @@ default_args = {
 # Merge user arguments from YAML
 # Using JSON deserialization for robustness against syntax errors
 try:
-    user_args_json = '{{ user_args_json }}'
+    user_args_json = '''{{ user_args_json }}'''
     user_args = json.loads(user_args_json)
     if not isinstance(user_args, dict):
         print(f"Warning: user_args is not a dict: {user_args}")
@@ -142,7 +147,7 @@ def generate_and_upload_dags(config_dir, project_id, bucket_name):
     Reads YAML configs, renders DAGs with Env vars, and uploads to GCS.
     """
     if not os.path.exists(config_dir):
-        print(f"Config directory {config_dir} not found.")
+        logger.error(f"Config directory {config_dir} not found.")
         sys.exit(1)
 
     # Initialize GCS Client
@@ -151,11 +156,11 @@ def generate_and_upload_dags(config_dir, project_id, bucket_name):
         bucket = storage_client.bucket(bucket_name)
 
     except Exception as e:
-        print(f"Failed to connect to GCS bucket {bucket_name}: {e}")
+        logger.error(f"Failed to connect to GCS bucket {bucket_name}: {e}")
         sys.exit(1)
     
     yaml_files = glob.glob(os.path.join(config_dir, "*.yaml"))
-    print(f"Found {len(yaml_files)} config files in {config_dir}")
+    logger.info(f"Found {len(yaml_files)} config files in {config_dir}")
 
     generated_dags = set()
 
@@ -166,7 +171,7 @@ def generate_and_upload_dags(config_dir, project_id, bucket_name):
                 
             dag_id = config.get('dag_id')
             if not dag_id:
-                print(f"Skipping {filename}: Missing dag_id")
+                logger.warning(f"Skipping {filename}: Missing dag_id")
                 continue
 
             cluster_conf = config.get('cluster_config', {})
@@ -181,8 +186,10 @@ def generate_and_upload_dags(config_dir, project_id, bucket_name):
             if user_args is None:
                 user_args = {}
             elif not isinstance(user_args, dict):
-                print(f"Warning: 'arguments' in {filename} is not a dict. Ignoring.")
+                logger.warning(f"Warning: 'arguments' in {filename} is not a dict. Ignoring.")
                 user_args = {}
+            
+            logger.debug(f"User args for {filename}: {user_args}")
 
             # Context now includes Project/Bucket from Environment
             context = {
@@ -213,23 +220,23 @@ def generate_and_upload_dags(config_dir, project_id, bucket_name):
             blob = bucket.blob(blob_name)
             blob.upload_from_string(rendered_dag, content_type='application/x-python')
             
-            print(f"Uploaded: gs://{bucket_name}/{blob_name}")
+            logger.info(f"Uploaded: gs://{bucket_name}/{blob_name}")
             generated_dags.add(blob_name)
             
         except Exception as e:
-            print(f"Error processing {filename}: {e}")
+            logger.error(f"Error processing {filename}: {e}")
             sys.exit(1)
 
     # Prune orphan DAGs in the bucket
-    print("Checking for orphan DAGs to delete...")
+    logger.info("Checking for orphan DAGs to delete...")
     blobs = bucket.list_blobs(prefix="dags/")
     for blob in blobs:
         if blob.name.endswith(".py") and blob.name not in generated_dags:
             try:
-                print(f"Deleting orphan DAG: gs://{bucket_name}/{blob.name}")
+                logger.info(f"Deleting orphan DAG: gs://{bucket_name}/{blob.name}")
                 blob.delete()
             except Exception as e:
-                print(f"Failed to delete {blob.name}: {e}")
+                logger.error(f"Failed to delete {blob.name}: {e}")
 
 if __name__ == "__main__":
     # Fetch Multi-Env variables
@@ -237,7 +244,7 @@ if __name__ == "__main__":
     bucket_name = os.environ.get('GCP_COMPOSER_BUCKET')
 
     if not project_id or not bucket_name:
-        print("Error: GCP_PROJECT_ID and GCP_COMPOSER_BUCKET must be set.")
+        logger.error("Error: GCP_PROJECT_ID and GCP_COMPOSER_BUCKET must be set.")
         sys.exit(1)
 
     base_dir = os.getcwd()
