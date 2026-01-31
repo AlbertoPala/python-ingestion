@@ -43,7 +43,7 @@ default_args = {
 with DAG(
     DAG_ID,
     default_args=default_args,
-    schedule_interval=SCHEDULE,
+    schedule=SCHEDULE,
     catchup=False,
     tags=['generated', 'agile-factory'],
 ) as dag:
