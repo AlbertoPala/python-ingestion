@@ -34,8 +34,9 @@ PROJECT_ID = "{{ project_id }}"
 BUCKET_NAME = "{{ bucket_name }}"
 
 # Note: Dataproc cluster names must be lowercase, no underscores, max 51 chars.
-# We replace underscores with hyphens and truncate the DAG ID if necessary.
-CLUSTER_NAME = "{{ dag_id.replace('_', '-')[:25] }}-cluster-{{ '{{' }} ts_nodash {{ '}}' }}"
+# Using execution_date formatted as YYYYMMDD-HHMM to satisfy regex and date requirement.
+# Format: dag-id-cluster-YYYYMMDD-HHMM (lowercase)
+CLUSTER_NAME = "{{ dag_id.replace('_', '-')[:20] }}-cluster-{{ '{{' }} execution_date.strftime('%Y%m%d-%H%M') {{ '}}' }}"
 
 
 default_args = {
