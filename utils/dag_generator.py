@@ -40,7 +40,7 @@ CLUSTER_NAME = "{{ dag_id.replace('_', '-')[:25] }}-cluster-{{ '{{' }} ts_nodash
 
 default_args = {
     'owner': 'airflow',
-    'depends_on_past': TRUE,
+    'depends_on_past': True,
     'start_date': pendulum.today('UTC').add(days=-1),
     'email_on_failure': False,
     'retries': 0,
