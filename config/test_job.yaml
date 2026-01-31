@@ -14,3 +14,7 @@ dependencies:
 arguments:
   owner: "mi equipo"
   retries: 2
+
+tags:
+  - "prueba"
+  - "conectividad"
