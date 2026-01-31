@@ -146,6 +146,8 @@ def generate_and_upload_dags(config_dir, project_id, bucket_name):
     yaml_files = glob.glob(os.path.join(config_dir, "*.yaml"))
     print(f"Found {len(yaml_files)} config files in {config_dir}")
 
+    generated_dags = set()
+
     for filename in yaml_files:
         try:
             with open(filename, 'r') as f:
@@ -201,10 +203,22 @@ def generate_and_upload_dags(config_dir, project_id, bucket_name):
             blob.upload_from_string(rendered_dag, content_type='application/x-python')
             
             print(f"Uploaded: gs://{bucket_name}/{blob_name}")
+            generated_dags.add(blob_name)
             
         except Exception as e:
             print(f"Error processing {filename}: {e}")
             sys.exit(1)
+
+    # Prune orphan DAGs in the bucket
+    print("Checking for orphan DAGs to delete...")
+    blobs = bucket.list_blobs(prefix="dags/")
+    for blob in blobs:
+        if blob.name.endswith(".py") and blob.name not in generated_dags:
+            try:
+                print(f"Deleting orphan DAG: gs://{bucket_name}/{blob.name}")
+                blob.delete()
+            except Exception as e:
+                print(f"Failed to delete {blob.name}: {e}")
 
 if __name__ == "__main__":
     # Fetch Multi-Env variables
